@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<meta name="description" content="json格式翻译">
+<meta name="keywords" content="在线json翻译">
+<meta name="author" content="DaZiYuan">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+    <title>JSON翻译</title>
+    <!-- <script src="https://unpkg.com/vue@3.2.45/dist/vue.global.js"></script> -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.2.33/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+    <div id="app" class="container mx-auto">
+        <div class="min-h-screen flex flex-col">
+            <textarea class="flex-1" v-model="input" placeholder="输入JSON"></textarea>
+            <button class="row" @click="translate">翻译</button>
+            <textarea class="flex-1" v-model="result" placeholder="翻译结果"></textarea>
+        </div>
+    </div>
+</body>
+<script>
+    const { createApp } = Vue
+
+    createApp({
+        data() {
+            return {
+                input: '{test:"Hello world"}',
+                result: ''
+            }
+        },
+        methods: {
+            _isJson(str) {
+                try {
+                    JSON.parse(str);
+                } catch (_e) {
+                    console.log("json invalid", str);
+                    return false;
+                }
+                return true;
+            },
+            async translate() {
+                let json = this.input;
+                if (!this._isJson(json)) {
+                    //尝试修复json
+                    json = eval(`(${json})`);
+                    this.input = json;
+                    console.log("fix json", json);
+                }
+                else
+                    json = JSON.parse(json);
+
+                this.input = JSON.stringify(json);
+
+                const res = await fetch(`/api/baidu`, {
+                    method: 'Post',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ json })
+                })
+                this.result = await res.text();
+            }
+        }
+    }).mount('#app')
+</script>
+
+</html>
